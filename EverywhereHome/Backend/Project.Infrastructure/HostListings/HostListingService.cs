@@ -43,11 +43,11 @@ public class HostListingService : IHostListingService
         var user = await _users.FindByIdAsync(hostId) ?? throw new InvalidOperationException("Користувача не знайдено.");
         if (!user.IsHost)
         {
-            user.IsHost = true;
-            await _users.UpdateAsync(user);
+            throw new InvalidOperationException("Створювати оголошення може лише підтверджений господар.");
         }
 
         var listing = Apply(new Listing { Id = Guid.NewGuid(), HostId = hostId }, input);
+        await ReplaceAmenitiesAsync(listing, input.Amenities, cancellationToken);
         _db.Listings.Add(listing);
         await _db.SaveChangesAsync(cancellationToken);
         return ToDto(listing);
@@ -58,6 +58,7 @@ public class HostListingService : IHostListingService
         Validate(input);
         var listing = await FindMineAsync(hostId, id, cancellationToken);
         Apply(listing, input);
+        await ReplaceAmenitiesAsync(listing, input.Amenities, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         return ToDto(listing);
     }
@@ -115,6 +116,8 @@ public class HostListingService : IHostListingService
         return await _db.Listings
             .Include(l => l.Photos)
             .Include(l => l.CategoryLinks)
+            .Include(l => l.Amenities)
+            .ThenInclude(a => a.Amenity)
             .FirstOrDefaultAsync(l => l.Id == id && l.HostId == hostId, cancellationToken)
             ?? throw new InvalidOperationException("Оголошення не знайдено.");
     }
@@ -171,6 +174,34 @@ public class HostListingService : IHostListingService
         return listing;
     }
 
+    private async Task ReplaceAmenitiesAsync(Listing listing, IReadOnlyList<string>? names, CancellationToken cancellationToken)
+    {
+        if (names is null)
+        {
+            return;
+        }
+
+        var wanted = names
+            .Select(name => name.Trim())
+            .Where(name => name.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        listing.Amenities.Clear();
+        foreach (var name in wanted)
+        {
+            var amenity = await _db.Amenities.FirstOrDefaultAsync(
+                item => item.Name.ToLower() == name.ToLower(),
+                cancellationToken);
+            if (amenity is null)
+            {
+                amenity = new Amenity { Id = Guid.NewGuid(), Name = name };
+                _db.Amenities.Add(amenity);
+            }
+
+            listing.Amenities.Add(new ListingAmenity { ListingId = listing.Id, AmenityId = amenity.Id });
+        }
+    }
+
     private static HostListingEditDto ToEditDto(Listing listing)
     {
         var categories = listing.CategoryLinks.Select(l => l.Category).Distinct().ToList();
@@ -196,7 +227,8 @@ public class HostListingService : IHostListingService
             listing.Bathrooms,
             listing.HouseRules,
             listing.IsPublished,
-            listing.Photos.OrderBy(p => p.SortOrder).Select(p => new HostPhotoDto(p.Id, p.Url)).ToList());
+            listing.Photos.OrderBy(p => p.SortOrder).Select(p => new HostPhotoDto(p.Id, p.Url)).ToList(),
+            listing.Amenities.Select(a => a.Amenity!.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList());
     }
 
     private static HostListingDto ToDto(Listing listing) =>

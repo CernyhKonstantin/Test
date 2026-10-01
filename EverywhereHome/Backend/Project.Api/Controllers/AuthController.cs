@@ -43,6 +43,22 @@ public class AuthController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
+    [HttpGet("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _authService.ConfirmEmailAsync(new ConfirmEmailRequest(userId, token), cancellationToken);
+            var frontend = _configuration["Frontend:Url"]?.TrimEnd('/') ?? "http://localhost:5173";
+            return Redirect($"{frontend}/login");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {

@@ -18,7 +18,7 @@ public class ListingService : IListingService
     {
         var listings = _db.Listings
             .AsNoTracking()
-            .Where(l => l.IsPublished);
+            .Where(l => l.IsPublished && !l.Host!.IsBlocked);
 
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
@@ -94,7 +94,7 @@ public class ListingService : IListingService
     {
         return await _db.Listings
             .AsNoTracking()
-            .Where(l => l.Id == id && l.IsPublished)
+            .Where(l => l.Id == id && l.IsPublished && !l.Host!.IsBlocked)
             .Select(l => new ListingDetailDto(
                 l.Id,
                 l.Title,
@@ -119,7 +119,16 @@ public class ListingService : IListingService
                 l.CancellationPolicy,
                 l.Photos.OrderBy(p => p.SortOrder).Select(p => p.Url).ToList(),
                 l.Amenities.Select(a => a.Amenity!.Name).ToList(),
-                new HostSummaryDto(l.Host!.DisplayName, l.Host.AvatarUrl)))
+                new HostSummaryDto(l.Host!.DisplayName, l.Host.AvatarUrl),
+                l.Reviews
+                    .OrderByDescending(r => r.CreatedAtUtc)
+                    .Select(r => new ReviewItemDto(r.Id, r.Author!.DisplayName, r.Rating, r.Text, r.CreatedAtUtc))
+                    .ToList(),
+                l.Bookings
+                    .Where(b => b.Status == BookingStatus.Confirmed)
+                    .OrderBy(b => b.CheckIn)
+                    .Select(b => new OccupiedStayDto(b.CheckIn, b.CheckOut))
+                    .ToList()))
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

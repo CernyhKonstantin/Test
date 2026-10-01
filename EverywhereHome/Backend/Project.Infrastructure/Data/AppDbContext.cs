@@ -19,6 +19,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<HostApplication> HostApplications => Set<HostApplication>();
+    public DbSet<Report> Reports => Set<Report>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -83,6 +87,34 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.HasOne(x => x.Booking)
                 .WithMany(x => x.Payments)
                 .HasForeignKey(x => x.BookingId);
+        });
+
+        builder.Entity<HostApplication>(entity =>
+        {
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Report>(entity =>
+        {
+            entity.HasOne(x => x.Reporter).WithMany().HasForeignKey(x => x.ReporterId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.ReportedUser).WithMany().HasForeignKey(x => x.ReportedUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Listing).WithMany().HasForeignKey(x => x.ListingId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Conversation>(entity =>
+        {
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Host).WithMany().HasForeignKey(x => x.HostId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Listing).WithMany().HasForeignKey(x => x.ListingId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasOne(x => x.Conversation).WithMany(x => x.Messages).HasForeignKey(x => x.ConversationId);
+            entity.HasOne(x => x.Sender).WithMany().HasForeignKey(x => x.SenderId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

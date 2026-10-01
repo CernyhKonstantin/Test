@@ -2,20 +2,32 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Project.Application.Admin;
 using Project.Application.Auth;
 using Project.Application.Entities;
 using Project.Application.Bookings;
+using Project.Application.Favorites;
+using Project.Application.Reviews;
+using Project.Application.HostApplications;
 using Project.Application.HostListings;
 using Project.Application.Listings;
+using Project.Application.Messages;
 using Project.Application.Profiles;
+using Project.Application.Reports;
+using Project.Infrastructure.Admin;
 using Project.Infrastructure.Auth;
 using Project.Infrastructure.Bookings;
+using Project.Infrastructure.Favorites;
+using Project.Infrastructure.Reviews;
 using Project.Infrastructure.Data;
 using Project.Application.Files;
 using Project.Infrastructure.Files;
+using Project.Infrastructure.HostApplications;
 using Project.Infrastructure.HostListings;
 using Project.Infrastructure.Listings;
+using Project.Infrastructure.Messages;
 using Project.Infrastructure.Profiles;
+using Project.Infrastructure.Reports;
 
 namespace Project.Infrastructure;
 
@@ -54,11 +66,18 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
 
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IListingService, ListingService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<IFavoriteService, FavoriteService>();
+        services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IHostListingService, HostListingService>();
+        services.AddScoped<IHostApplicationService, HostApplicationService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IConversationService, ConversationService>();
         services.AddSingleton<IFileStorage, LocalFileStorage>();
 
         return services;

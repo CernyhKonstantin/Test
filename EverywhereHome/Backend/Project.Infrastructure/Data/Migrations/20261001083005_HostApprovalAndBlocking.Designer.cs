@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Project.Infrastructure.Data;
 namespace Project.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001083005_HostApprovalAndBlocking")]
+    partial class HostApprovalAndBlocking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,68 +343,6 @@ namespace Project.Infrastructure.Data.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("Project.Application.Entities.ChatMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("ChatMessages");
-                });
-
-            modelBuilder.Entity("Project.Application.Entities.Conversation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("HostId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Kind")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ListingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HostId");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Conversations");
-                });
-
             modelBuilder.Entity("Project.Application.Entities.Favorite", b =>
                 {
                     b.Property<string>("UserId")
@@ -619,46 +560,6 @@ namespace Project.Infrastructure.Data.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Project.Application.Entities.Report", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ListingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ReportedUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ReporterId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Target")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("ReportedUserId");
-
-                    b.HasIndex("ReporterId");
-
-                    b.ToTable("Reports");
-                });
-
             modelBuilder.Entity("Project.Application.Entities.Review", b =>
                 {
                     b.Property<Guid>("Id")
@@ -765,50 +666,6 @@ namespace Project.Infrastructure.Data.Migrations
                     b.Navigation("Listing");
                 });
 
-            modelBuilder.Entity("Project.Application.Entities.ChatMessage", b =>
-                {
-                    b.HasOne("Project.Application.Entities.Conversation", "Conversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Project.Application.Entities.AppUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("Project.Application.Entities.Conversation", b =>
-                {
-                    b.HasOne("Project.Application.Entities.AppUser", "Host")
-                        .WithMany()
-                        .HasForeignKey("HostId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Project.Application.Entities.Listing", "Listing")
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Project.Application.Entities.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Host");
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Project.Application.Entities.Favorite", b =>
                 {
                     b.HasOne("Project.Application.Entities.Listing", "Listing")
@@ -902,31 +759,6 @@ namespace Project.Infrastructure.Data.Migrations
                     b.Navigation("Booking");
                 });
 
-            modelBuilder.Entity("Project.Application.Entities.Report", b =>
-                {
-                    b.HasOne("Project.Application.Entities.Listing", "Listing")
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Project.Application.Entities.AppUser", "ReportedUser")
-                        .WithMany()
-                        .HasForeignKey("ReportedUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Project.Application.Entities.AppUser", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("ReportedUser");
-
-                    b.Navigation("Reporter");
-                });
-
             modelBuilder.Entity("Project.Application.Entities.Review", b =>
                 {
                     b.HasOne("Project.Application.Entities.AppUser", "Author")
@@ -954,11 +786,6 @@ namespace Project.Infrastructure.Data.Migrations
             modelBuilder.Entity("Project.Application.Entities.Booking", b =>
                 {
                     b.Navigation("Payments");
-                });
-
-            modelBuilder.Entity("Project.Application.Entities.Conversation", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Project.Application.Entities.Listing", b =>
